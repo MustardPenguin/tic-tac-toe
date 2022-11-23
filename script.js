@@ -4,6 +4,8 @@ let playerButton = document.querySelectorAll('.player');
 let playButton = document.querySelector('.play');
 let winnerText = document.querySelector('.winner');
 
+
+
 const gameBoard = (function() {
     let _board = [
         ['', '', ''],
@@ -77,6 +79,11 @@ const gameBoard = (function() {
         _currentTurn = _player1;
         winnerText.textContent = "";
         clearBoard();
+
+        let currentTurn = "" + _currentTurn;
+        if(_playing && currentTurn.includes("bot")) {
+            botMove();
+        }
         console.log("Starting tic tac toe with " + player1 + " vs " + player2);
 
     }
@@ -90,8 +97,27 @@ const gameBoard = (function() {
             tile.textContent = mark;
 
             checkWinner();
+
+            let currentTurn = "" + _currentTurn;
+            
+            if(_playing && currentTurn.includes("bot")) {
+                setTimeout(botMove, 500);
+            }
+        }
+    }
+    function botMove() {
+        /* Testing */
+        let r, c;
+        for(let i = 0; i < 3; i++) {
+            for(let j = 0; j < 3; j++) {
+                if(_board[i][j] === '') {
+                    r = i; c = j;
+                    break;
+                }
+            }
         }
         
+        markTile(r, c);
     }
     function minimax() {
 
