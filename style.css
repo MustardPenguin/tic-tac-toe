@@ -3,10 +3,6 @@
     margin: 0px;
 }
 
-html, body {
-    
-}
-
 .board {
     height: 700px;
     width: 700px;
@@ -35,6 +31,10 @@ html, body {
     font-size: 24px;
     padding: 8px;
     width: 120px;
+}
+
+.play {
+    background-color: greenyellow;
 }
 
 .game {
