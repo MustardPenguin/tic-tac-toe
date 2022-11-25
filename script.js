@@ -4,8 +4,6 @@ let playerButton = document.querySelectorAll('.player');
 let playButton = document.querySelector('.play');
 let winnerText = document.querySelector('.winner');
 
-
-
 const gameBoard = (function() {
     let _board = [
         ['', '', ''],
@@ -16,6 +14,9 @@ const gameBoard = (function() {
     let _player1;
     let _player2;
     let _currentTurn;
+    const _score = {
+        "X": 1, "O": -1, "Tie": 0
+    }
 
     function clearBoard() {
         _board.forEach( (element) => { 
@@ -24,7 +25,7 @@ const gameBoard = (function() {
          tiles.forEach( (element) => { element.textContent = "" } );
     }
     function declareWinner(check) {
-        let winner = check == null ? "Tie" : check === "X" ? _player1 : _player2;
+        let winner = check == "Tie" ? "Tie" : check === "X" ? _player1 : _player2;
         winnerText.textContent = winner === "Tie" ? "Tie!" : capitalizeFirstLetter(winner) + " has won the game!";
         
         playButton.style.backgroundColor = 'greenyellow';
@@ -39,7 +40,7 @@ const gameBoard = (function() {
             for(let j = 0; j < 3; j++) {
                 if(_board[i][j] !== check) { won = false; break; }
             }
-            if(won) { declareWinner(check); return; }
+            if(won) { return check; }
         }
 
         // Vertical check
@@ -50,13 +51,13 @@ const gameBoard = (function() {
             for(let j = 0; j < 3; j++) {
                 if(_board[j][i] !== check) { won = false; break; }
             }
-            if(won) { declareWinner(check); return; }
+            if(won) { return check; }
         }
 
         // Diagonal check
         let check = _board[1][1];
         let won = check !== '' && ((check === _board[0][0] && check === _board[2][2]) || (check === _board[2][0] && check === _board[0][2]));
-        if(won) { declareWinner(_board[1][1]); return; }
+        if(won) { return _board[1][1]; }
 
         // Tie check
         let empty = false
@@ -69,7 +70,9 @@ const gameBoard = (function() {
             }
         }
         if(!empty) {
-            declareWinner();
+            return "Tie";
+        } else {
+            return;
         }
     }
     function startGame(player1, player2) {
@@ -96,7 +99,8 @@ const gameBoard = (function() {
             let tile = document.querySelector('div.game button[value="' + r + c + '"]');
             tile.textContent = mark;
 
-            checkWinner();
+            let winner = checkWinner();
+            if(winner) { declareWinner(winner); }
 
             let currentTurn = "" + _currentTurn;
             
@@ -106,21 +110,66 @@ const gameBoard = (function() {
         }
     }
     function botMove() {
-        /* Testing */
+        let bestScore = -Infinity;
         let r, c;
+        let mark = _currentTurn === _player1 ? "X" : "O";
+
         for(let i = 0; i < 3; i++) {
             for(let j = 0; j < 3; j++) {
                 if(_board[i][j] === '') {
-                    r = i; c = j;
-                    break;
+                    _board[i][j] = mark;
+                    let currentScore = minimax(0, false);
+                    //console.log(currentScore);
+                    _board[i][j] = "";
+                    if(currentScore > bestScore) {
+                        bestScore = currentScore;
+                        r = i; c = j;
+                    }
                 }
             }
         }
-        
+
         markTile(r, c);
     }
-    function minimax() {
-
+    function minimax(depth, max) {
+        let result = checkWinner();
+        if(result != null) {
+            return _score[result];
+        }
+        
+        if(max) {
+            let bestScore = -Infinity;
+            let mark = _currentTurn === _player1 ? "X" : "O";
+            for(let i = 0; i < 3; i++) {
+                for(let j = 0; j < 3; j++) {
+                    if(_board[i][j] === '') {
+                        _board[i][j] = mark;
+                        let currentScore = minimax(depth + 1, false);
+                        _board[i][j] = '';
+                        if(currentScore > bestScore) {
+                            bestScore = currentScore;
+                        }
+                    }
+                }
+            }
+            return bestScore;
+        } else {
+            let bestScore = Infinity;
+            let mark = _currentTurn === _player1 ? "O" : "X";
+            for(let i = 0; i < 3; i++) {
+                for(let j = 0; j < 3; j++) {
+                    if(_board[i][j] === '') {
+                        _board[i][j] = mark;
+                        let currentScore = minimax(depth + 1, true);
+                        _board[i][j] = '';
+                        if(currentScore < bestScore) {
+                            bestScore = currentScore;
+                        }
+                    }
+                }
+            }
+            return bestScore;
+        }
     }
     const getBoard = () => _board;
     const isPlaying = () => _playing;
