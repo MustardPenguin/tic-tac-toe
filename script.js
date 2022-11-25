@@ -14,9 +14,10 @@ const gameBoard = (function() {
     let _player1;
     let _player2;
     let _currentTurn;
+    let _canClick = false;
     const _score = {
         "X": 1, "O": -1, "Tie": 0
-    }
+    } // Where x is the maximizing player, multiply by -1 for o to be maximizing
 
     function clearBoard() {
         _board.forEach( (element) => { 
@@ -87,6 +88,7 @@ const gameBoard = (function() {
         if(_playing && currentTurn.includes("bot")) {
             botMove();
         }
+        _canClick = true;
         console.log("Starting tic tac toe with " + player1 + " vs " + player2);
 
     }
@@ -105,6 +107,7 @@ const gameBoard = (function() {
             let currentTurn = "" + _currentTurn;
             
             if(_playing && currentTurn.includes("bot")) {
+                _canClick = false;
                 setTimeout(botMove, 500);
             }
         }
@@ -113,12 +116,13 @@ const gameBoard = (function() {
         let bestScore = -Infinity;
         let r, c;
         let mark = _currentTurn === _player1 ? "X" : "O";
-
+        let mul = mark === "X" ? 1 : -1;
+        
         for(let i = 0; i < 3; i++) {
             for(let j = 0; j < 3; j++) {
                 if(_board[i][j] === '') {
                     _board[i][j] = mark;
-                    let currentScore = minimax(0, false);
+                    let currentScore = minimax(0, false, mul);
                     //console.log(currentScore);
                     _board[i][j] = "";
                     if(currentScore > bestScore) {
@@ -130,21 +134,21 @@ const gameBoard = (function() {
         }
 
         markTile(r, c);
+        _canClick = true;
     }
-    function minimax(depth, max) {
+    function minimax(depth, max, mul) {
         let result = checkWinner();
         if(result != null) {
-            return _score[result];
+            return _score[result] * mul;
         }
-        
         if(max) {
-            let bestScore = -Infinity;
+            let bestScore = -Infinity; // Should be AI?
             let mark = _currentTurn === _player1 ? "X" : "O";
             for(let i = 0; i < 3; i++) {
                 for(let j = 0; j < 3; j++) {
                     if(_board[i][j] === '') {
                         _board[i][j] = mark;
-                        let currentScore = minimax(depth + 1, false);
+                        let currentScore = minimax(depth + 1, false, mul);
                         _board[i][j] = '';
                         if(currentScore > bestScore) {
                             bestScore = currentScore;
@@ -160,7 +164,7 @@ const gameBoard = (function() {
                 for(let j = 0; j < 3; j++) {
                     if(_board[i][j] === '') {
                         _board[i][j] = mark;
-                        let currentScore = minimax(depth + 1, true);
+                        let currentScore = minimax(depth + 1, true, mul);
                         _board[i][j] = '';
                         if(currentScore < bestScore) {
                             bestScore = currentScore;
@@ -173,8 +177,9 @@ const gameBoard = (function() {
     }
     const getBoard = () => _board;
     const isPlaying = () => _playing;
+    const canClick = () => _canClick;
 
-    return {clearBoard, checkWinner, getBoard, isPlaying, startGame, markTile};
+    return {clearBoard, checkWinner, getBoard, isPlaying, startGame, markTile, canClick};
 })();
 
 // Functions
@@ -193,7 +198,9 @@ playerButton.forEach(function(button) {
 
 tiles.forEach(function(tile) {
     tile.addEventListener('click', function() {
+        console.log(gameBoard.canClick());
         if(!gameBoard.isPlaying()) { return; }
+        if(!gameBoard.canClick()) { return; }
         //console.log(tile.value);
         let value = tile.value
         let r = value[0];
